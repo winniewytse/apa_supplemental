@@ -1,0 +1,133 @@
+---
+title             : "**Template for APA Style Supplemental Materials Based on `papaja`**"
+
+shorttitle        : "Short title"
+    
+floatsintext      : no
+figurelist        : no
+tablelist         : no
+footnotelist      : no
+linenumbers       : no
+mask              : no
+draft             : no
+header-includes:
+  - |
+    \makeatletter
+    \renewcommand{\paragraph}{\@startsection{paragraph}{4}{\parindent}%
+      {0\baselineskip \@plus 0.2ex \@minus 0.2ex}%
+      {-1em}%
+      {\normalfont\normalsize\bfseries\typesectitle}}
+    
+    \renewcommand{\subparagraph}[1]{\@startsection{subparagraph}{5}{1em}%
+      {0\baselineskip \@plus 0.2ex \@minus 0.2ex}%
+      {-\z@\relax}%
+      {\normalfont\normalsize\bfseries\itshape\hspace{\parindent}{#1}\textit{\addperi}}{\relax}}
+    \makeatother
+
+documentclass: "apa7"
+classoption       : "man"
+output: 
+  papaja::apa6_pdf:
+    includes:
+      in_header: "preamble.tex"
+---
+
+```{r setup, include = FALSE}
+library("papaja")
+library(tidyverse)
+library(kableExtra)
+theme_set(theme_bw())
+```
+
+```{r analysis-preferences}
+# Seed for random number generation
+set.seed(42)
+knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
+```
+
+```{r apa7fig, include = FALSE}
+# Custom knitr hook to add notes to the plot
+knitr::knit_hooks$set(plot = function(x, options) {
+  size = paste(c(sprintf("width=%s", options$out.width), 
+                 sprintf("height=%s", options$out.height), 
+                 options$out.extra), collapse = ",")
+  size = sprintf("[%s]", size)
+  cap = options$fig.cap
+  lab = paste0(options$fig.lp, options$label)
+  if (length(cap) && !is.na(cap)) {
+    cap = sprintf("\\caption{%s}%s\n", cap, 
+                  knitr:::create_label(lab, latex = TRUE))
+  }
+  note = options$fig.note
+  if (length(note) && !is.na(note)) {
+    note = sprintf("\\figurenote{%s}\n", note)
+  }
+  paste("\\begin{figure}\n",
+        cap,
+        "\\includegraphics", size, "{",
+        knitr::opts_knit$get("base.url"), paste(x, collapse = "."),
+        "}\n",
+        note,
+        "\\end{figure}",
+        sep = '')
+})
+```
+
+
+This is a template for creating APA style supplemental materials based on `papaja`. Although `papaja` provides `apa_table()` to easily generate APA table, this template utilizes the packages `knitr` and `kableExtra` for more flexible styling of tables. 
+
+
+
+\renewcommand{\thetable}{S\arabic{table}}
+
+```{r}
+# escape = FALSE needed to show math symbols
+mpg %>% 
+  group_by(class) %>%
+  summarize(
+    Mean = mean(cty),
+    Median = median(cty),
+    SD = sd(cty),
+    Min = min(cty),
+    Max = max(cty)
+  ) %>%
+  knitr::kable(
+    booktabs = TRUE, 
+    escape = FALSE, 
+    col.names = c("Class", "Mean", "Median", "SD", "Min", "Max"), 
+    align = c("l", rep("r", 5)), 
+    caption = "Descriptive statistics of city miles per gallon by class. "
+  ) %>%
+  add_header_above(c(" " = 1, 
+                     "Central Tendency" = 2, 
+                     "Dispersion" = 2), 
+                   escape = FALSE)  %>%
+  add_header_above(c(" " = 1, 
+                     "Statistics" = 4)) %>%
+  footnote(
+    general_title = "Note.", 
+    general = "SD = standard deviation. Min = minumum. Max = maximum. ", 
+    threeparttable = TRUE, 
+    footnote_as_chunk = TRUE, 
+    escape = FALSE
+  ) %>%
+  kable_styling(font_size = 11)
+```
+
+
+\renewcommand{\thefigure}{S\arabic{figure}}
+
+```{r}
+plot_cap <- "A Correlation Plot Between Speed and Distance. "
+plot_note <- "
+speed = Speed (mph). dist = Stopping distance (ft). 
+"
+```
+
+
+```{r fig.cap = plot_cap, fig.note = plot_note}
+plot(cars)
+```
+
+
+
